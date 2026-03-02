@@ -43,8 +43,3 @@ No Python server is required.
    -@@@.  @@@@.%@@=.  .@@@..@@-.   .*@@@@@#..@@@.  %@@.. %@@@@@@@. ...:@@@@@.. ..@@@@+@@..=@@@@@@   
                                        . .                             .....     . .       .. ..    
  ```                                                                                                   
-- Clipboard copy may be blocked by some browsers if the page is not in a secure context.
-- Very large output widths can take longer to process in the browser.
-
-
-
