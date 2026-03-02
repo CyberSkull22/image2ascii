@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Image to ASCII Converter</title>
+    <style>
+        :root {
+            --bg-top: #edf6f3;
+            --bg-bottom: #f9fbff;
+            --surface: #ffffff;
+            --text: #17212b;
+            --muted: #5f6b76;
+            --border: #d6e0e8;
+            --brand: #0f766e;
+            --brand-hover: #0d5f58;
+            --success: #0b7a57;
+            --error: #b42318;
+            --output-bg: #0c1424;
+            --output-text: #e6edf7;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+            color: var(--text);
+            background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+        }
+
+        .app {
+            width: min(960px, 100%);
+            margin: 0 auto;
+            padding: 22px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: var(--surface);
+            box-shadow: 0 18px 36px rgba(6, 22, 45, 0.08);
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: clamp(1.5rem, 2.3vw, 2rem);
+            line-height: 1.25;
+        }
+
+        .subtitle {
+            margin: 0 0 20px;
+            color: var(--muted);
+            font-size: 0.98rem;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 12px;
+            margin: 12px 0;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 180px;
+        }
+
+        label {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: #263543;
+        }
+
+        input[type="file"],
+        input[type="number"] {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--text);
+            font: inherit;
+        }
+
+        input[type="number"] {
+            width: 150px;
+        }
+
+        button {
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 10px;
+            font: inherit;
+            font-weight: 600;
+            color: #fff;
+            background: var(--brand);
+            cursor: pointer;
+            transition: background-color 0.15s ease, transform 0.15s ease;
+        }
+
+        button:hover:enabled {
+            background: var(--brand-hover);
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        input:focus,
+        button:focus {
+            outline: 2px solid rgba(15, 118, 110, 0.25);
+            outline-offset: 1px;
+        }
+
+        #preview {
+            max-width: 220px;
+            max-height: 220px;
+            display: block;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 6px;
+            background: #fff;
+        }
+
+        #status {
+            min-height: 1.5em;
+            margin: 6px 0 10px;
+            font-weight: 700;
+            color: var(--muted);
+        }
+
+        #status.ok {
+            color: var(--success);
+        }
+
+        #status.error {
+            color: var(--error);
+        }
+
+        #output {
+            min-height: 140px;
+            max-height: 60vh;
+            margin: 0;
+            overflow: auto;
+            white-space: pre;
+            line-height: 1;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #1f2f4f;
+            background: var(--output-bg);
+            color: var(--output-text);
+        }
+
+        .note {
+            margin-top: 2px;
+            font-size: 0.86rem;
+            color: var(--muted);
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 12px;
+            }
+
+            .app {
+                padding: 16px;
+                border-radius: 12px;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <h1>Image to ASCII Converter</h1>
+        <p class="subtitle">Select an image, choose an output width, and convert it to ASCII directly in your browser.</p>
+
+        <section class="controls">
+            <div class="field">
+                <label for="imageInput">Image file</label>
+                <input type="file" id="imageInput" accept="image/*">
+            </div>
+            <img id="preview" alt="Selected image preview" src="" hidden>
+        </section>
+
+        <section class="controls">
+            <div class="field">
+                <label for="resolution">ASCII width (characters)</label>
+                <input id="resolution" type="number" value="120" min="20" max="600">
+                <div class="note">Recommended range: 80 to 180.</div>
+            </div>
+        </section>
+
+        <section class="controls">
+            <button id="convertBtn">Convert to ASCII</button>
+            <button id="copyBtn" disabled>Copy</button>
+            <button id="downloadBtn" disabled>Download .txt</button>
+        </section>
+
+        <section>
+            <div id="status" aria-live="polite"></div>
+            <pre id="output"></pre>
+        </section>
+    </main>
+
+    <script>
+        const ASCII_CHARS = "@%#*+=-:. ";
+        const MIN_WIDTH = 20;
+        const MAX_WIDTH = 600;
+        const HEIGHT_CORRECTION = 0.55;
+
+        const ui = {
+            imageInput: document.getElementById("imageInput"),
+            resolutionInput: document.getElementById("resolution"),
+            preview: document.getElementById("preview"),
+            status: document.getElementById("status"),
+            output: document.getElementById("output"),
+            convertButton: document.getElementById("convertBtn"),
+            copyButton: document.getElementById("copyBtn"),
+            downloadButton: document.getElementById("downloadBtn")
+        };
+
+        const state = {
+            asciiText: "",
+            previewObjectUrl: null
+        };
+
+        function setStatus(message, type = "") {
+            ui.status.textContent = message;
+            ui.status.className = type;
+        }
+
+        function resetResult() {
+            state.asciiText = "";
+            ui.output.textContent = "";
+            ui.copyButton.disabled = true;
+            ui.downloadButton.disabled = true;
+        }
+
+        function pixelToAscii(gray) {
+            const index = Math.floor((gray / 255) * (ASCII_CHARS.length - 1));
+            return ASCII_CHARS[index];
+        }
+
+        function createImageFromFile(file) {
+            return new Promise((resolve, reject) => {
+                const tempUrl = URL.createObjectURL(file);
+                const image = new Image();
+
+                image.onload = () => {
+                    URL.revokeObjectURL(tempUrl);
+                    resolve(image);
+                };
+
+                image.onerror = () => {
+                    URL.revokeObjectURL(tempUrl);
+                    reject(new Error("Invalid image file."));
+                };
+
+                image.src = tempUrl;
+            });
+        }
+
+        async function imageFileToAscii(file, width) {
+            const image = await createImageFromFile(file);
+            const ratio = image.naturalHeight / image.naturalWidth;
+            const height = Math.max(1, Math.floor(ratio * width * HEIGHT_CORRECTION));
+
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+
+            const context = canvas.getContext("2d", { willReadFrequently: true });
+            context.drawImage(image, 0, 0, width, height);
+
+            const { data } = context.getImageData(0, 0, width, height);
+            const lines = [];
+
+            for (let y = 0; y < height; y += 1) {
+                let line = "";
+                for (let x = 0; x < width; x += 1) {
+                    const i = (y * width + x) * 4;
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                    line += pixelToAscii(gray);
+                }
+                lines.push(line);
+            }
+
+            return lines.join("\n");
+        }
+
+        ui.imageInput.addEventListener("change", () => {
+            const file = ui.imageInput.files[0];
+            if (!file) return;
+
+            if (state.previewObjectUrl) URL.revokeObjectURL(state.previewObjectUrl);
+            state.previewObjectUrl = URL.createObjectURL(file);
+            ui.preview.src = state.previewObjectUrl;
+            ui.preview.hidden = false;
+
+            resetResult();
+            setStatus("Image loaded. Ready to convert.");
+        });
+
+        ui.convertButton.addEventListener("click", async () => {
+            const file = ui.imageInput.files[0];
+            if (!file) {
+                setStatus("Please choose an image first.", "error");
+                return;
+            }
+
+            const width = Number.parseInt(ui.resolutionInput.value, 10) || 120;
+            if (width < MIN_WIDTH || width > MAX_WIDTH) {
+                setStatus(`Width must be between ${MIN_WIDTH} and ${MAX_WIDTH}.`, "error");
+                return;
+            }
+
+            setStatus("Converting in browser...");
+            ui.convertButton.disabled = true;
+            ui.copyButton.disabled = true;
+            ui.downloadButton.disabled = true;
+            ui.output.textContent = "";
+
+            try {
+                const ascii = await imageFileToAscii(file, width);
+                state.asciiText = ascii;
+                ui.output.textContent = ascii;
+                ui.copyButton.disabled = false;
+                ui.downloadButton.disabled = false;
+                setStatus("Done. ASCII art is ready.", "ok");
+            } catch (error) {
+                setStatus(`Conversion error: ${error.message}`, "error");
+            } finally {
+                ui.convertButton.disabled = false;
+            }
+        });
+
+        ui.copyButton.addEventListener("click", async () => {
+            if (!state.asciiText) return;
+
+            try {
+                await navigator.clipboard.writeText(state.asciiText);
+                setStatus("ASCII copied to clipboard.", "ok");
+            } catch (_error) {
+                setStatus("Clipboard access denied by browser.", "error");
+            }
+        });
+
+        ui.downloadButton.addEventListener("click", () => {
+            if (!state.asciiText) return;
+
+            const file = new Blob([state.asciiText], { type: "text/plain" });
+            const url = URL.createObjectURL(file);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "ascii.txt";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+            setStatus("Downloaded ascii.txt", "ok");
+        });
+    </script>
+</body>
+</html>
