@@ -31,21 +31,18 @@ No Python server is required.
 `-- .gitignore
 ```
 
-## Deploy on GitHub Pages
-
-1. Push this repository to GitHub
-2. Go to `Settings` -> `Pages`
-3. In `Build and deployment`, choose:
-   - `Source`: `Deploy from a branch`
-   - `Branch`: `main` and `/ (root)`
-4. Save and wait a few seconds
-
-Your app will be available at:
-
-`https://<your-username>.github.io/<your-repo>/`
-
-## Notes
-
+## Example                                                                                                                                                                                                                                                                
+```text
+.@@@.  @@@. .@@@. .@@@@..@@@@@@@@@..%@@@@@@..@@@.  %@@.. %@@@@@@@.   -@@@@@@.. .%@@@@@%. .@@@@@@%.  
+.=@@.  @@@=..@@@..%@@@@:.  .@@@.  .@@@..:@@@.@@@   %@@.. %@@...@@@=.%@@-..@@@..@@@.. @@@.@@@...@@@  
+..@@+.=@@@@..@@...@@=@@@.  .@@@.  .@@%. .@@@.@@@...%@@.. %@@. ..@@@.@@@.. .@@@.@@@.  ....@@@.. .....
+  .@@-.@@-@@.@@@..@@@.@@@..  @@@   @@@.       @@@@@@@@@.  @@@   .@@#.@@=. .*@@:@@@ .......@@@@@@... 
+   @@@@@*.@@@@@.@@@@. .@@+.  @@@   @*..  .....@@*..:-@@.  @@@   .@@# @:...@@@@:@@@..@@@@@. %@@@@:...
+  .*@@@@..@@@....@@@@@@@@%.  @@@  .@@@.  .@@@.@@*...@@@ ..@@@.. -@@-.@@*. .%@@.@@@. ..@@@*%%....@@@ 
+  .@@@@...@@@@..@@@....@@...@@@.  :@@@...@@..#@@...%@@...%@@...@@=..%@@-..@@@..@@@...@@:.@@ ...@@@. 
+   -@@@.  @@@@.%@@=.  .@@@..@@-.   .*@@@@@#..@@@.  %@@.. %@@@@@@@. ...:@@@@@.. ..@@@@+@@..=@@@@@@   
+                                       . .                             .....     . .       .. ..    
+ ```                                                                                                   
 - Clipboard copy may be blocked by some browsers if the page is not in a secure context.
 - Very large output widths can take longer to process in the browser.
 
